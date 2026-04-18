@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jain mess - Fantasy</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#0b0b0f;color:#fff}header{padding:20px;text-align:center;background:#12121a;box-shadow:0 2px 10px rgba(0,0,0,.4)}h1{margin:0;font-size:28px}.sub{color:#aaa}.container{max-width:1100px;margin:auto;padding:20px}.card{background:#171722;border-radius:16px;padding:16px;margin-bottom:20px;box-shadow:0 4px 18px rgba(0,0,0,.3)}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #2a2a35;text-align:left}th{color:#aaa}.rank{font-weight:bold}.clickable{cursor:pointer;color:#7dd3fc}.hidden{display:none}.pill{background:#27273a;padding:4px 10px;border-radius:999px;font-size:12px;color:#ddd}.top3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}.winner{background:#1b1b2a;padding:16px;border-radius:18px;text-align:center}.winner h2{margin:6px 0}.small{font-size:12px;color:#aaa}@media(max-width:700px){.top3{grid-template-columns:1fr}table{font-size:13px}}
+</style>
+</head>
+<body>
+<header>
+<h1>🏆 Jain mess - Fantasy</h1>
+<div class="sub">Live Leaderboard • Auto Updated</div>
+</header>
+<div class="container">
+<div id="top3" class="top3"></div>
+<div class="card">
+<h2>Leaderboard</h2>
+<div id="leaderboard">Loading...</div>
+</div>
+<div class="card hidden" id="teamCard">
+<h2 id="teamTitle">Team</h2>
+<div id="teamPlayers"></div>
+</div>
+</div>
+<script>
+const standingsCSV='https://docs.google.com/spreadsheets/d/e/2PACX-1vRj9mVxd9QtXLwiEfDFTTsa0AxlNtpDvCsWbvYSyAB3URSgRNp0wr0ioIBMkH2TAdYgvLh3ozFWoBHk/pub?gid=2054197991&single=true&output=csv';
+const playersCSV='https://docs.google.com/spreadsheets/d/e/2PACX-1vRj9mVxd9QtXLwiEfDFTTsa0AxlNtpDvCsWbvYSyAB3URSgRNp0wr0ioIBMkH2TAdYgvLh3ozFWoBHk/pub?gid=0&single=true&output=csv';
+function parseCSV(text){const lines=text.trim().split(/\r?\n/).map(l=>l.split(','));const headers=lines.shift();return lines.map(r=>Object.fromEntries(headers.map((h,i)=>[h.trim(),(r[i]||'').trim()])))}
+async function load(){const s=await fetch(standingsCSV).then(r=>r.text());const p=await fetch(playersCSV).then(r=>r.text());const standings=parseCSV(s);const players=parseCSV(p);renderTop3(standings);renderBoard(standings,players)}
+function renderTop3(data){let html='';data.slice(0,3).forEach((r,i)=>{html+=`<div class="winner"><div class="small">#${i+1}</div><h2>${r['Owner Name']||r.Owner||''}</h2><div>${r['Total Points']||''} pts</div></div>`});document.getElementById('top3').innerHTML=html}
+function renderBoard(data,players){let html='<table><tr><th>Rank</th><th>Owner</th><th>Points</th></tr>';data.forEach((r,i)=>{const owner=r['Owner Name']||r.Owner||'';const pts=r['Total Points']||'';html+=`<tr><td class='rank'>${i+1}</td><td class='clickable' onclick="showTeam('${owner.replace(/'/g,"\\'")}')">${owner}</td><td>${pts}</td></tr>`});html+='</table>';document.getElementById('leaderboard').innerHTML=html;window.allPlayers=players}
+function showTeam(owner){const rows=window.allPlayers.filter(x=>(x['Owner Name']||x.Owner||'')===owner);let html='<table><tr><th>Player</th><th>IPL Team</th><th>Points</th></tr>';rows.forEach(r=>{html+=`<tr><td>${r['Player Name']||r.Player||''}</td><td>${r['Team Name']||r.Team||''}</td><td>${r['Fantasy Points']||r.Points||''}</td></tr>`});html+='</table>';document.getElementById('teamTitle').innerText=owner+' Squad';document.getElementById('teamPlayers').innerHTML=html;document.getElementById('teamCard').classList.remove('hidden');window.scrollTo({top:document.getElementById('teamCard').offsetTop,behavior:'smooth'})}
+load();setInterval(load,300000);
+</script>
+</body>
+</html>
